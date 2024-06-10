@@ -5,7 +5,6 @@ import java.util.Date;
 public class Budget {
     private Long budget_id;
     private Long user_id;
-    private Long category_id;
     private Double budget_amount;
     private Date start_date;
     private Date end_date;
@@ -28,13 +27,6 @@ public class Budget {
         this.user_id = user_id;
     }
 
-    public Long getCategory_id() {
-        return category_id;
-    }
-
-    public void setCategory_id(Long category_id) {
-        this.category_id = category_id;
-    }
 
     public Double getBudget_amount() {
         return budget_amount;

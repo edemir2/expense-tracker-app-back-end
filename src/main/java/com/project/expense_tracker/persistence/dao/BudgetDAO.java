@@ -23,7 +23,6 @@ public class BudgetDAO {
             Budget budget = new Budget();
             budget.setBudget_id(rs.getLong("budget_id"));
             budget.setUser_id(rs.getLong("user_id"));
-            budget.setCategory_id(rs.getLong("category_id"));
             budget.setBudget_amount(rs.getDouble("budget_amount"));
             budget.setStart_date(rs.getDate("start_date")); // Use Date type
             budget.setEnd_date(rs.getDate("end_date")); // Use Date type
@@ -38,15 +37,17 @@ public class BudgetDAO {
     public Budget findById(Long id) {
         return jdbcTemplate.queryForObject("SELECT * FROM Budget WHERE budget_id = ?", new Object[]{id}, new BudgetRowMapper());
     }
-
+    public Budget findByUserId(Long userId) {
+        return jdbcTemplate.queryForObject("SELECT * FROM Budget WHERE user_id = ?", new Object[]{userId}, new BudgetRowMapper());
+    }
     public int save(Budget budget) {
-        return jdbcTemplate.update("INSERT INTO Budget (user_id, category_id, budget_amount, start_date, end_date) VALUES (?, ?, ?, ?, ?)",
-                budget.getUser_id(), budget.getCategory_id(), budget.getBudget_amount(), budget.getStart_date(), budget.getEnd_date());
+        return jdbcTemplate.update("INSERT INTO Budget (user_id, budget_amount, start_date, end_date) VALUES (?, ?, ?, ?)",
+                budget.getUser_id(), budget.getBudget_amount(), budget.getStart_date(), budget.getEnd_date());
     }
 
     public int update(Budget budget) {
-        return jdbcTemplate.update("UPDATE Budget SET user_id = ?, category_id = ?, budget_amount = ?, start_date = ?, end_date = ? WHERE budget_id = ?",
-                budget.getUser_id(), budget.getCategory_id(), budget.getBudget_amount(), budget.getStart_date(), budget.getEnd_date(), budget.getBudget_id());
+        return jdbcTemplate.update("UPDATE Budget SET user_id = ?, budget_amount = ?, start_date = ?, end_date = ? WHERE budget_id = ?",
+                budget.getUser_id(), budget.getBudget_amount(), budget.getStart_date(), budget.getEnd_date(), budget.getBudget_id());
     }
 
     public int deleteById(Long id) {

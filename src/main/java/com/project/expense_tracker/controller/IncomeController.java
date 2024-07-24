@@ -3,12 +3,13 @@ package com.project.expense_tracker.controller;
 import com.project.expense_tracker.persistence.dao.IncomeDAO;
 import com.project.expense_tracker.persistence.dao.BudgetDAO;
 import com.project.expense_tracker.persistence.entity.Income;
-import com.project.expense_tracker.persistence.dao.UserDAO;
-import com.project.expense_tracker.persistence.entity.User;
 import com.project.expense_tracker.persistence.entity.Budget;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -20,6 +21,8 @@ public class IncomeController {
     private IncomeDAO incomeDAO;
     @Autowired
     private BudgetDAO budgetDAO;
+
+    private static final Logger logger = LoggerFactory.getLogger(IncomeController.class);
 
     @GetMapping
     public List<Income> getAllIncomes() {
@@ -33,12 +36,17 @@ public class IncomeController {
 
     @PostMapping
     public int createIncome(@RequestBody Income income) {
+        logger.info("Received request to create income for user_id {}: amount = {}", income.getUser_id(), income.getAmount());
         int result = incomeDAO.save(income);
         if (result > 0) {
             Budget budget = budgetDAO.findByUserId(income.getUser_id());
             if (budget != null) {
+                logger.info("Updating budget for user_id {}: current budget = {}, adding amount = {}",
+                        income.getUser_id(), budget.getBudget_amount(), income.getAmount());
                 budget.setBudget_amount(budget.getBudget_amount() + income.getAmount());
                 budgetDAO.update(budget);
+                logger.info("Updated budget for user_id {}: new budget = {}",
+                        income.getUser_id(), budget.getBudget_amount());
             }
         }
         return result;

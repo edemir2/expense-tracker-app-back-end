@@ -24,8 +24,8 @@ public class CalculationController {
     private BudgetDAO budgetDAO;
 
     @GetMapping("/categoryTotals")
-    public Map<Long, Double> calculateCategoryTotals() {
-        List<Expense> expenses = expenseDAO.findAll();
+    public Map<Long, Double> calculateCategoryTotals(@RequestParam Long userId) {
+        List<Expense> expenses = expenseDAO.findAllByUserId(userId);
         return expenses.stream().collect(Collectors.groupingBy(
                 Expense::getCategory_id,
                 Collectors.summingDouble(Expense::getAmount)
@@ -33,33 +33,41 @@ public class CalculationController {
     }
 
     @GetMapping("/monthlyTotal")
-    public Double calculateMonthlyTotal() {
-        List<Expense> expenses = expenseDAO.findAll();
-        return expenses.stream().mapToDouble(Expense::getAmount).sum();
+    public Double calculateMonthlyTotal(@RequestParam Long userId) {
+        List<Expense> expenses = expenseDAO.findAllByUserId(userId);
+        LocalDate now = LocalDate.now();
+        return expenses.stream()
+                .filter(expense -> expense.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate().getMonth() == now.getMonth())
+                .mapToDouble(Expense::getAmount)
+                .sum();
     }
 
     @GetMapping("/dailyAverage")
-    public Double calculateDailyAverage() {
-        List<Expense> expenses = expenseDAO.findAll();
+    public Double calculateDailyAverage(@RequestParam Long userId) {
+        List<Expense> expenses = expenseDAO.findAllByUserId(userId);
         long uniqueDays = expenses.stream()
                 .map(expense -> expense.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate())
                 .distinct()
                 .count();
-        return expenses.stream().mapToDouble(Expense::getAmount).sum() / uniqueDays;
+        return uniqueDays == 0 ? 0 : expenses.stream().mapToDouble(Expense::getAmount).sum() / uniqueDays;
     }
 
     @GetMapping("/highestExpense")
-    public Expense findHighestExpense() {
-        List<Expense> expenses = expenseDAO.findAll();
+    public Expense findHighestExpense(@RequestParam Long userId) {
+        List<Expense> expenses = expenseDAO.findAllByUserId(userId);
         return expenses.stream().max((e1, e2) -> Double.compare(e1.getAmount(), e2.getAmount())).orElse(null);
     }
 
     @GetMapping("/remainingBudget")
-    public Double calculateRemainingBudget() {
-        List<Expense> expenses = expenseDAO.findAll();
-        List<Budget> budgets = budgetDAO.findAll();
+    public Double calculateRemainingBudget(@RequestParam Long userId) {
+        List<Expense> expenses = expenseDAO.findAllByUserId(userId);
+        Budget budget = budgetDAO.findByUserId(userId);
+        if (budget == null) {
+            return null; // Or handle as appropriate
+        }
         double totalExpenses = expenses.stream().mapToDouble(Expense::getAmount).sum();
-        double totalBudget = budgets.stream().mapToDouble(Budget::getBudget_amount).sum();
-        return totalBudget - totalExpenses;
+        return budget.getBudget_amount() - totalExpenses;
     }
+
+
 }

@@ -10,13 +10,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Date;
 import java.util.List;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 @Repository
 public class ExpenseDAO {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
-
+    private static final Logger logger = LoggerFactory.getLogger(ExpenseDAO.class);
     private static class ExpenseRowMapper implements RowMapper<Expense> {
         @Override
         public Expense mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -34,21 +35,18 @@ public class ExpenseDAO {
     public List<Expense> findAll() {
         return jdbcTemplate.query("SELECT * FROM Expense", new ExpenseRowMapper());
     }
+    public List<Expense> findAllByUserId(Long userId) {
+        return jdbcTemplate.query("SELECT * FROM Expense WHERE user_id = ?", new Object[]{userId}, new ExpenseRowMapper());
+    }
 
     public Expense findById(Long id) {
         return jdbcTemplate.queryForObject("SELECT * FROM Expense WHERE expense_id = ?", new Object[]{id}, new ExpenseRowMapper());
     }
 
     public int save(Expense expense) {
-        int result = jdbcTemplate.update("INSERT INTO Expense (user_id, category_id, amount, date, description, payment_method_id) VALUES (?, ?, ?, ?, ?, ?)",
-                expense.getUser_id(), expense.getCategory_id(), expense.getAmount(), expense.getDate(), expense.getDescription(), expense.getPayment_method_id());
-
-        if (result > 0) {
-            jdbcTemplate.update("UPDATE User SET budget = budget - ? WHERE user_id = ?",
-                    expense.getAmount(), expense.getUser_id());
-        }
-
-        return result;
+        logger.info("Saving expense for user_id {}: amount = {}", expense.getUser_id(), expense.getAmount());
+        return jdbcTemplate.update("INSERT INTO Expense (user_id, category_id, payment_method_id, amount, date, description) VALUES (?, ?, ?, ?, ?, ?)",
+                expense.getUser_id(), expense.getCategory_id(), expense.getPayment_method_id(), expense.getAmount(), expense.getDate(), expense.getDescription());
     }
 
 

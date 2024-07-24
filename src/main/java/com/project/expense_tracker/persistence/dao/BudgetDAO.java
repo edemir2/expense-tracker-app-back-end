@@ -37,9 +37,11 @@ public class BudgetDAO {
     public Budget findById(Long id) {
         return jdbcTemplate.queryForObject("SELECT * FROM Budget WHERE budget_id = ?", new Object[]{id}, new BudgetRowMapper());
     }
+
     public Budget findByUserId(Long userId) {
         return jdbcTemplate.queryForObject("SELECT * FROM Budget WHERE user_id = ?", new Object[]{userId}, new BudgetRowMapper());
     }
+
     public int save(Budget budget) {
         return jdbcTemplate.update("INSERT INTO Budget (user_id, budget_amount, start_date, end_date) VALUES (?, ?, ?, ?)",
                 budget.getUser_id(), budget.getBudget_amount(), budget.getStart_date(), budget.getEnd_date());

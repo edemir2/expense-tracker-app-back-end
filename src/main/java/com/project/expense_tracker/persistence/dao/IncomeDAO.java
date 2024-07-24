@@ -1,10 +1,14 @@
 package com.project.expense_tracker.persistence.dao;
 
 import com.project.expense_tracker.persistence.entity.Income;
+import com.project.expense_tracker.persistence.entity.Budget;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,6 +19,12 @@ public class IncomeDAO {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+
+    @Autowired
+    private BudgetDAO budgetDAO;
+
+    private static final Logger logger = LoggerFactory.getLogger(IncomeDAO.class);
 
     private static class IncomeRowMapper implements RowMapper<Income> {
         @Override
@@ -38,15 +48,9 @@ public class IncomeDAO {
     }
 
     public int save(Income income) {
-        int result = jdbcTemplate.update("INSERT INTO Income (user_id, amount, date, source) VALUES (?, ?, ?, ?)",
+        logger.info("Saving income for user_id {}: amount = {}", income.getUser_id(), income.getAmount());
+        return jdbcTemplate.update("INSERT INTO Income (user_id, amount, date, source) VALUES (?, ?, ?, ?)",
                 income.getUser_id(), income.getAmount(), income.getDate(), income.getSource());
-
-        if (result > 0) {
-            jdbcTemplate.update("UPDATE User SET budget = budget + ? WHERE user_id = ?",
-                    income.getAmount(), income.getUser_id());
-        }
-
-        return result;
     }
 
 
